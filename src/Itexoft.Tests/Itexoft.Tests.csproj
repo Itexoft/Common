@@ -1,0 +1,45 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+        <RuntimeFrameworkVersion>10.0.0-preview.7.25380.108</RuntimeFrameworkVersion>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0"/>
+        <PackageReference Include="NUnit" Version="3.14.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="NUnit.Framework"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Itexoft\Itexoft.csproj"/>
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="EmbeddedResources/app1.zip">
+            <LogicalName>Itexoft.Tests.EmbeddedWeb.app1.zip</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="EmbeddedResources/app2.zip">
+            <LogicalName>Itexoft.Tests.EmbeddedWeb.app2.zip</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Remove="TerminalKit.Demo\**"/>
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="TerminalKit.Demo\**"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="TerminalKit.Demo\**"/>
+    </ItemGroup>
+
+
+</Project>
