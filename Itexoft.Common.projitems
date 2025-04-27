@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>dd7a7075-5c97-4483-b8b3-b87ff66dbce9</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Itexoft.Common</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\ConcurrentDictionaryEx.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\ConcurrentDictionaryLazy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Collections\ConcurrentSet.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DotNET\SR.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DotNET\System\Collections\Generic\DebugViewDictionaryItem.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DotNET\System\Collections\HashHelpers.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\CommonExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Extensions\StringExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\PipeText.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\TextWriterCache.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Threading\KeyLocks.cs" />
+    <Folder Include="$(MSBuildThisFileDirectory)DotNET\System\Runtime\CompilerServices\" />
+    <Folder Include="$(MSBuildThisFileDirectory)DotNET\System\Threading\" />
+    <Compile Include="$(MSBuildThisFileDirectory)DotNET\ThrowHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExecutionTools\Node\NodePackageRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExecutionTools\Node\NpxRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ExecutionTools\ToolRunner.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\ResourceUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\TempFile.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Nuget\NativeResolver.cs" />
+  </ItemGroup>
+</Project>
