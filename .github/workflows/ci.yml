@@ -1,0 +1,90 @@
+name: CI
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+  workflow_call:
+    outputs:
+      run-id:
+        description: ci run id
+        value: ${{ github.run_id }}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            9.0.x
+            10.0.x
+
+      - name: Restore
+        run: dotnet restore src/Itexoft.sln
+
+      - name: Build
+        run: dotnet build src/Itexoft.sln -c Release --no-restore
+
+      - name: Test
+        run: |
+          set -euo pipefail
+          mkdir -p test-artifacts
+          dotnet test src/Itexoft.Tests/Itexoft.Tests.csproj \
+            -c Release --no-build \
+            --logger "trx;LogFileName=tests.trx" \
+            --results-directory test-artifacts
+
+      - name: Pack
+        run: |
+          set -euo pipefail
+          mkdir -p nuget
+          dotnet pack src/Itexoft/Itexoft.csproj -c Release --no-build -o nuget
+
+      - name: Locate packages
+        id: pkgs
+        run: |
+          set -euo pipefail
+          files=()
+          while IFS= read -r f; do files+=("$f"); done < <(find "$GITHUB_WORKSPACE/nuget" -type f -name '*.nupkg' -print | sort)
+          if [ "${#files[@]}" -eq 0 ]; then echo "::error::No .nupkg found after pack"; exit 1; fi
+          {
+            echo "paths<<EOF"
+            printf "%s\n" "${files[@]}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: itexoft-packages
+          path: ${{ steps.pkgs.outputs.paths }}
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Upload test artifacts
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: itexoft-tests
+          path: test-artifacts/**
+          if-no-files-found: ignore
+          retention-days: 1

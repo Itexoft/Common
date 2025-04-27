@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <ItemDefinitionGroup>
+        <EmbeddedWebApp>
+            <BundleId></BundleId>
+            <RootDirectory></RootDirectory>
+            <CompressionLevel>Optimal</CompressionLevel>
+        </EmbeddedWebApp>
+    </ItemDefinitionGroup>
+
+    <PropertyGroup>
+        <EmbeddedWebIntermediateDir>$(IntermediateOutputPath)EmbeddedWeb\</EmbeddedWebIntermediateDir>
+    </PropertyGroup>
+
+    <UsingTask TaskName="GenerateEmbeddedWebArchives" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+        <ParameterGroup>
+            <Items ParameterType="Microsoft.Build.Framework.ITaskItem[]" Required="true"/>
+            <ProjectDirectory ParameterType="System.String" Required="true"/>
+            <OutputDirectory ParameterType="System.String" Required="true"/>
+            <Archives ParameterType="Microsoft.Build.Framework.ITaskItem[]" Output="true"/>
+        </ParameterGroup>
+        <Task>
+            <Reference Include="System.IO.Compression"/>
+            <Reference Include="System.IO.Compression.FileSystem"/>
+            <Using Namespace="System"/>
+            <Using Namespace="System.Collections.Generic"/>
+            <Using Namespace="System.IO"/>
+            <Using Namespace="System.IO.Compression"/>
+            <Using Namespace="System.Linq"/>
+            <Code Type="Fragment" Language="cs"><![CDATA[
+        var result = new List<Microsoft.Build.Framework.ITaskItem>();
+        if (Items == null || Items.Length == 0)
+        {
+            Archives = Array.Empty<Microsoft.Build.Framework.ITaskItem>();
+            return true;
+        }
+
+        Directory.CreateDirectory(OutputDirectory);
+        var comparer = StringComparer.OrdinalIgnoreCase;
+
+        foreach (var group in Items.GroupBy(item => item.GetMetadata("BundleId"), comparer))
+        {
+            var bundleId = group.Key;
+            if (string.IsNullOrWhiteSpace(bundleId))
+            {
+                Log.LogWarning("Embedded web asset item '{0}' has no BundleId metadata and will be skipped.", group.First().ItemSpec);
+                continue;
+            }
+
+            var files = group
+                .Select(item => Path.GetFullPath(item.ItemSpec))
+                .Where(File.Exists)
+                .Distinct(comparer)
+                .ToList();
+
+            if (files.Count == 0)
+            {
+                Log.LogWarning("No files were found for embedded web bundle '{0}'.", bundleId);
+                continue;
+            }
+
+            var rootOverride = group.Select(item => item.GetMetadata("RootDirectory"))
+                .FirstOrDefault(v => !string.IsNullOrWhiteSpace(v));
+            string rootDirectory;
+            if (!string.IsNullOrWhiteSpace(rootOverride))
+            {
+                rootDirectory = Path.IsPathRooted(rootOverride)
+                    ? Path.GetFullPath(rootOverride)
+                    : Path.GetFullPath(Path.Combine(ProjectDirectory, rootOverride));
+            }
+            else
+            {
+                rootDirectory = FindCommonRoot(files);
+            }
+
+            if (!rootDirectory.EndsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
+            {
+                rootDirectory += Path.DirectorySeparatorChar;
+            }
+
+            var archivePath = Path.Combine(OutputDirectory, $"{bundleId}.zip");
+            using var archiveStream = File.Create(archivePath);
+            using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Create, leaveOpen: true);
+
+            foreach (var file in files)
+            {
+                var relative = Path.GetRelativePath(rootDirectory, file);
+                if (relative.StartsWith("..", StringComparison.Ordinal))
+                {
+                    relative = Path.GetFileName(file);
+                }
+
+                relative = relative.Replace('\\', '/').TrimStart('/');
+                if (string.IsNullOrWhiteSpace(relative))
+                {
+                    relative = Path.GetFileName(file);
+                }
+
+                var compression = ParseCompression(group.First().GetMetadata("CompressionLevel"));
+                var entry = archive.CreateEntry(relative, compression);
+                using var entryStream = entry.Open();
+                using var fileStream = File.OpenRead(file);
+                fileStream.CopyTo(entryStream);
+            }
+
+            archive.Dispose();
+
+            var taskItem = new Microsoft.Build.Utilities.TaskItem(archivePath);
+            taskItem.SetMetadata("BundleId", bundleId);
+            taskItem.SetMetadata("Extension", ".zip");
+            taskItem.SetMetadata("FullPath", Path.GetFullPath(archivePath));
+            result.Add(taskItem);
+        }
+
+        Archives = result.ToArray();
+        return !Log.HasLoggedErrors;
+
+        static string FindCommonRoot(IReadOnlyList<string> paths)
+        {
+            if (paths.Count == 1)
+            {
+                var directory = Path.GetDirectoryName(paths[0]) ?? paths[0];
+                return Path.GetFullPath(directory);
+            }
+
+            var firstSegments = Split(Path.GetFullPath(paths[0]));
+            var commonLength = firstSegments.Length;
+
+            foreach (var path in paths.Skip(1))
+            {
+                var segments = Split(Path.GetFullPath(path));
+                commonLength = Math.Min(commonLength, segments.Length);
+
+                for (var i = 0; i < commonLength; i++)
+                {
+                    if (!StringComparer.OrdinalIgnoreCase.Equals(firstSegments[i], segments[i]))
+                    {
+                        commonLength = i;
+                        break;
+                    }
+                }
+
+                if (commonLength == 0)
+                {
+                    break;
+                }
+            }
+
+            if (commonLength == 0)
+            {
+                return Path.GetDirectoryName(paths[0]) ?? Path.GetPathRoot(paths[0])!;
+            }
+
+            return string.Join(Path.DirectorySeparatorChar, firstSegments.Take(commonLength));
+        }
+
+        static string[] Split(string path)
+        {
+            var parts = path.Split(new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
+            if (Path.IsPathRooted(path))
+            {
+                var root = Path.GetPathRoot(path);
+                if (!string.IsNullOrEmpty(root))
+                {
+                    parts = (new[] { root.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) }).Concat(parts.Skip(1)).ToArray();
+                }
+            }
+            return parts;
+        }
+
+        static CompressionLevel ParseCompression(string value)
+        {
+            if (Enum.TryParse(value, ignoreCase: true, out CompressionLevel compression))
+            {
+                return compression;
+            }
+
+            return CompressionLevel.Optimal;
+        }
+      ]]></Code>
+        </Task>
+    </UsingTask>
+
+    <Target Name="_GenerateEmbeddedWebArchives" BeforeTargets="BeforeBuild" Condition="'@(EmbeddedWebApp)' != ''">
+        <MakeDir Directories="$(EmbeddedWebIntermediateDir)"/>
+        <GenerateEmbeddedWebArchives Items="@(EmbeddedWebApp)" ProjectDirectory="$(MSBuildProjectDirectory)" OutputDirectory="$(EmbeddedWebIntermediateDir)">
+            <Output TaskParameter="Archives" ItemName="_EmbeddedWebArchives"/>
+        </GenerateEmbeddedWebArchives>
+
+        <ItemGroup>
+            <EmbeddedResource Include="%(_EmbeddedWebArchives.FullPath)">
+                <LogicalName>EmbeddedWeb.%(_EmbeddedWebArchives.BundleId)%(_EmbeddedWebArchives.Extension)</LogicalName>
+            </EmbeddedResource>
+        </ItemGroup>
+    </Target>
+</Project>
