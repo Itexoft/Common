@@ -1,0 +1,18 @@
+<Project>
+    <PropertyGroup>
+        <VersionFile>$(MSBuildThisFileDirectory)VERSION</VersionFile>
+        <VersionFromFile Condition="Exists('$(VersionFile)')">$([System.IO.File]::ReadAllText('$(VersionFile)').Trim())</VersionFromFile>
+        <Version Condition="'$(VersionFromFile)' != ''">$(VersionFromFile)</Version>
+        <PackageVersion Condition="'$(VersionFromFile)' != ''">$(VersionFromFile)</PackageVersion>
+        <AssemblyVersion Condition="'$(VersionFromFile)' != ''">$(VersionFromFile)</AssemblyVersion>
+        <FileVersion Condition="'$(VersionFromFile)' != ''">$(VersionFromFile)</FileVersion>
+        <_RidFolder Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)</_RidFolder>
+        <_RidFolder Condition="'$(_RidFolder)' == '' and $([MSBuild]::IsOSPlatform('Windows'))">win</_RidFolder>
+        <_RidFolder Condition="'$(_RidFolder)' == '' and $([MSBuild]::IsOSPlatform('OSX'))">osx</_RidFolder>
+        <_RidFolder Condition="'$(_RidFolder)' == '' and $([MSBuild]::IsOSPlatform('Linux'))">linux</_RidFolder>
+        <RestoreOutputPath>$(BaseIntermediateOutputPath)</RestoreOutputPath>
+        <_RidFolder Condition="'$(_RidFolder)' == ''">neutral</_RidFolder>
+        <BaseIntermediateOutputPath>obj/$(_RidFolder)/</BaseIntermediateOutputPath>
+        <BaseOutputPath>bin/$(_RidFolder)/</BaseOutputPath>
+    </PropertyGroup>
+</Project>

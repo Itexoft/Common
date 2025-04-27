@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+        <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+        <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="coverlet.collector" Version="6.0.4" />
+        <PackageReference Include="Microsoft.Diagnostics.NETCore.Client" Version="0.2.652701" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.0" />
+        <PackageReference Include="NUnit" Version="3.14.0" />
+        <PackageReference Include="NUnit3TestAdapter" Version="4.6.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="NUnit.Framework" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\Itexoft\Itexoft.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Include="EmbeddedResources/app1.zip">
+            <LogicalName>Itexoft.Tests.EmbeddedWeb.app1.zip</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Include="EmbeddedResources/app2.zip">
+            <LogicalName>Itexoft.Tests.EmbeddedWeb.app2.zip</LogicalName>
+        </EmbeddedResource>
+        <EmbeddedResource Remove="TerminalKit.Demo\**" />
+        <EmbeddedResource Remove="obj\**" />
+        <EmbeddedResource Remove="bin\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <Compile Remove="TerminalKit.Demo\**" />
+        <Compile Remove="obj\**" />
+        <Compile Remove="bin\**" />
+    </ItemGroup>
+    <ItemGroup>
+        <None Remove="TerminalKit.Demo\**" />
+        <None Remove="obj\**" />
+        <None Remove="bin\**" />
+    </ItemGroup>
+
+
+</Project>
