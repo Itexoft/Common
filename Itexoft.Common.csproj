@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <PackageId>Itexoft.Common</PackageId>
+        <Version>0.0.0.1</Version>
+        <Authors>Denis Kudelin</Authors>
+        <Copyright>Denis Kudelin</Copyright>
+        <PackageProjectUrl>https://github.com/Itexoft/Common</PackageProjectUrl>
+        <Company>Itexoft</Company>
+        <Product>Itexoft.Common</Product>
+        <Description>Itexoft Common Utils</Description>
+        <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+        <RepositoryType>git</RepositoryType>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <EnableDefaultItems>false</EnableDefaultItems>
+        <RepositoryUrl>https://github.com/Itexoft/Common</RepositoryUrl>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Remove="Itexoft.Common.projitems"/>
+        <None Remove=".gitignore"/>
+    </ItemGroup>
+    <ItemGroup>
+        <None Include="LICENSE.md" Pack="true" PackagePath=""/>
+        <None Include="README.md" Pack="true" PackagePath=""/>
+        <None Include="NOTICE.md" Pack="true" PackagePath=""/>
+    </ItemGroup>
+</Project>
